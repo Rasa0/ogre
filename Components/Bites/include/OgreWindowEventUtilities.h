@@ -52,6 +52,12 @@ THE SOFTWARE.
 */
 namespace OgreBites
 {
+    class ITextInputListener
+    {
+    public:
+        virtual void TakeTextInput(unsigned int character) = 0;
+    };
+
     /**
         Callback class used to send out window events to client app
     */
@@ -162,6 +168,13 @@ namespace OgreBites
 
         // backwards compatibility
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
+
+        static void SetTextInputListener(ITextInputListener* textInputListener);
+        static ITextInputListener* _textInputListener;
+
+        static void SetUpdateCursor(bool(*updateCursor)());
+        static bool(*_updateCursor)();
+
         //! Internal winProc (RenderWindow's use this when creating the Win32 Window)
         static LRESULT CALLBACK _WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif

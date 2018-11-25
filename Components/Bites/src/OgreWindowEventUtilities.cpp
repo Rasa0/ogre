@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include <X11/Xlib.h>
 #endif
 
+
 using namespace Ogre;
 
 namespace OgreBites {
@@ -53,6 +54,21 @@ static void GLXProc( RenderWindow *win, const XEvent &event );
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 //--------------------------------------------------------------------------------//
+
+void WindowEventUtilities::SetTextInputListener(ITextInputListener* textInputListener)
+{
+    _textInputListener = textInputListener;
+}
+
+ITextInputListener* WindowEventUtilities::_textInputListener = nullptr;
+
+void WindowEventUtilities::SetUpdateCursor(bool(*updateCursor)())
+{
+    _updateCursor = updateCursor;
+}
+
+bool(*WindowEventUtilities::_updateCursor)() = nullptr;
+
 LRESULT CALLBACK WindowEventUtilities::_WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     if (uMsg == WM_CREATE)
@@ -120,6 +136,15 @@ LRESULT CALLBACK WindowEventUtilities::_WndProc(HWND hWnd, UINT uMsg, WPARAM wPa
         if (wParam != VK_SPACE)
             return 0;
         break;
+    case WM_CHAR:
+        if (wParam > 0 && wParam < 0x10000)
+        {
+            if (_textInputListener)
+            {
+                _textInputListener->TakeTextInput((unsigned int)wParam);
+            }
+        }
+        return 0;
     case WM_ENTERSIZEMOVE:
         //log->logMessage("WM_ENTERSIZEMOVE");
         break;
@@ -164,6 +189,9 @@ LRESULT CALLBACK WindowEventUtilities::_WndProc(HWND hWnd, UINT uMsg, WPARAM wPa
         win->destroy();
         return 0;
     }
+    case WM_SETCURSOR:
+        if (LOWORD(lParam) == HTCLIENT && _updateCursor != nullptr && _updateCursor())
+            return 1;
     }
 
     return DefWindowProc( hWnd, uMsg, wParam, lParam );
